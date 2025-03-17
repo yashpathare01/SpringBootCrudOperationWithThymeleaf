@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bike Management System</title>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+	
+<div class="container my-4">
+    <h1>Bike List</h1>
+
+    <!-- Button to Open Add Bike Modal -->
+	<button class="btn btn-primary btn-sm mb-3" data-bs-toggle="modal"
+		data-bs-target="#addBikeModal">Add Bike</button>
+
+	<!-- Search Bar -->
+	<div class="input-group w-25">
+		<input type="text" id="searchBar" class="form-control"
+			placeholder="Search by model and company">
+		<button id="searchIcon" class="btn btn-primary">
+			<i class="fa-solid fa-search"></i>
+		</button>
+	</div>
+
+
+
+	<!-- Bike List Table -->
+	<table class="table table-striped table-responsive-md">
+		<thead>
+			<tr>
+				<th>Bike Model</th>
+				<th>Bike Company</th>
+				<th>Bike Price</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="bike : ${bikelist}">
+				<td th:text="${bike.bikeModel}"></td>
+				<td th:text="${bike.bikeCompany}"></td>
+				<td th:text="${bike.bikePrice}"></td>
+				<td>
+					<button class="btn btn-primary update-btn" data-bs-toggle="modal"
+						data-bs-target="#updateBikeModal" th:data-id="${bike.bikeId}">
+						Update</button> <a th:href="@{/deleteBike/{id}(id=${bike.bikeId})}"
+					class="btn btn-danger">Delete</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	
+	<!-- Pagination Controls -->
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <button id="prevPage" class="btn btn-secondary btn-sm">Previous</button>
+    <span id="page-info">Page 1</span>
+    <button id="nextPage" class="btn btn-secondary btn-sm">Next</button>
+</div>
+	
+	</div>
+
+	<!-- Add Bike Modal -->
+	<div class="modal fade" id="addBikeModal" tabindex="-1"
+		aria-labelledby="addBikeModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="addBikeModalLabel">Add New Bike</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"
+						aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form th:action="@{/saveBike}" th:object="${bike}" method="post">
+						<div class="mb-3">
+							<label class="form-label">Bike Model</label> <input type="text"
+								class="form-control" th:field="*{bikeModel}" required>
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Bike Company</label> <input type="text"
+								class="form-control" th:field="*{bikeCompany}" required>
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Bike Price</label> <input type="number"
+								class="form-control" th:field="*{bikePrice}" required>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary"
+								data-bs-dismiss="modal">Close</button>
+							<button type="submit" class="btn btn-success">Save Bike</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<!-- Update Bike Modal -->
+	<div class="modal fade" id="updateBikeModal" tabindex="-1"
+		aria-labelledby="updateBikeModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="updateBikeModalLabel">Update Bike</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"
+						aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form th:action="@{/saveBike}" method="post">
+						<!-- Hidden ID Field -->
+						<input type="hidden" id="updateBikeId" name="bikeId">
+
+						<div class="mb-3">
+							<label class="form-label">Bike Model</label> <input type="text"
+								class="form-control" id="updateBikeModel" name="bikeModel"
+								required>
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Bike Company</label> <input type="text"
+								class="form-control" id="updateBikeCompany" name="bikeCompany"
+								required>
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Bike Price</label> <input type="number"
+								class="form-control" id="updateBikePrice" name="bikePrice"
+								required>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary"
+								data-bs-dismiss="modal">Close</button>
+							<button type="submit" class="btn btn-success">Update
+								Bike</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Script for Update modal -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+		$(document).ready(function() {
+			$('.update-btn').on('click', function() {
+				var bikeId = $(this).data('id'); // Get Bike ID from button
+
+				$.ajax({
+					url : '/getBike/' + bikeId, // Fetch bike data
+					type : 'GET',
+					success : function(bike) {
+						// Populate modal fields
+						$('#updateBikeId').val(bike.bikeId);
+						$('#updateBikeModel').val(bike.bikeModel);
+						$('#updateBikeCompany').val(bike.bikeCompany);
+						$('#updateBikePrice').val(bike.bikePrice);
+					}
+				});
+			});
+		});
+	</script>
+
+
+<!-- Functionality for search bar -->
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			let searchBar = document.getElementById("searchBar");
+			let searchIcon = document.getElementById("searchIcon");
+
+			function performSearch() {
+				let filter = searchBar.value.toLowerCase(); // Get search input and convert to lowercase
+				let tableRows = document.querySelectorAll("tbody tr"); // Select all table rows
+
+				tableRows.forEach(function(row) {
+					let model = row.cells[0].textContent.toLowerCase(); // Bike Model (Column 1)
+					let company = row.cells[1].textContent.toLowerCase(); // Bike Company (Column 2)
+
+					// Show row if either model or company name includes the search term
+					if (model.includes(filter) || company.includes(filter)) {
+						row.style.display = "";
+					} else {
+						row.style.display = "none";
+					}
+				});
+			}
+
+			// Trigger search on button click
+			searchIcon.addEventListener("click", function() {
+				performSearch();
+			});
+
+			// Trigger search on pressing Enter key inside the input field
+			searchBar.addEventListener("keypress", function(event) {
+				if (event.key === "Enter") {
+					event.preventDefault(); // Prevent form submission if inside a form
+					performSearch();
+				}
+			});
+		});
+	</script>
+
+
+<!-- script functionality for pagignation -->
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    let searchBar = document.getElementById("searchBar");
+    let searchIcon = document.getElementById("searchIcon");
+    let tableRows = document.querySelectorAll("tbody tr");
+    let rowsPerPage = 5; // Change this number to adjust the rows per page
+    let currentPage = 1;
+
+    function displayRows() {
+        let start = (currentPage - 1) * rowsPerPage;
+        let end = start + rowsPerPage;
+
+        tableRows.forEach((row, index) => {
+            row.style.display = index >= start && index < end ? "" : "none";
+        });
+
+        updatePaginationButtons();
+    }
+
+    function updatePaginationButtons() {
+        let totalPages = Math.ceil(tableRows.length / rowsPerPage);
+        document.getElementById("page-info").textContent = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById("prevPage").disabled = currentPage === 1;
+        document.getElementById("nextPage").disabled = currentPage === totalPages;
+    }
+
+    document.getElementById("prevPage").addEventListener("click", function () {
+        if (currentPage > 1) {
+            currentPage--;
+            displayRows();
+        }
+    });
+
+    document.getElementById("nextPage").addEventListener("click", function () {
+        if (currentPage * rowsPerPage < tableRows.length) {
+            currentPage++;
+            displayRows();
+        }
+    });
+
+    function performSearch() {
+        let filter = searchBar.value.toLowerCase();
+        tableRows.forEach((row) => {
+            let model = row.cells[0].textContent.toLowerCase();
+            let company = row.cells[1].textContent.toLowerCase();
+            row.style.display = model.includes(filter) || company.includes(filter) ? "" : "none";
+        });
+    }
+
+    searchIcon.addEventListener("click", performSearch);
+    searchBar.addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            performSearch();
+        }
+    });
+
+    displayRows(); // Initial display
+});
+</script>
+
+
+
+
+
+</body>
+</html>
